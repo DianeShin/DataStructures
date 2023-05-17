@@ -108,52 +108,206 @@ public class SortingTest
 			System.out.println("입력이 잘못되었습니다. 오류 : " + e.toString());
 		}
 	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	private static int[] DoBubbleSort(int[] value)
-	{
-		// TODO : Bubble Sort 를 구현하라.
-		// value는 정렬안된 숫자들의 배열이며 value.length 는 배열의 크기가 된다.
+// value는 정렬안된 숫자들의 배열이며 value.length 는 배열의 크기가 된다.
 		// 결과로 정렬된 배열은 리턴해 주어야 하며, 두가지 방법이 있으므로 잘 생각해서 사용할것.
 		// 주어진 value 배열에서 안의 값만을 바꾸고 value를 다시 리턴하거나
 		// 같은 크기의 새로운 배열을 만들어 그 배열을 리턴할 수도 있다.
-		return (value);
-	}
+		
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+    private static int[] DoBubbleSort(int[] value) {
+        int n = value.length;
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = 0; j < n - i - 1; j++) {
+                if (value[j] > value[j + 1]) {
+                    // Swap elements
+                    int temp = value[j];
+                    value[j] = value[j + 1];
+                    value[j + 1] = temp;
+                }
+            }
+        }
+        return value;
+    }
+    
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	private static int[] DoInsertionSort(int[] value)
-	{
-		// TODO : Insertion Sort 를 구현하라.
-		return (value);
-	}
+    private static int[] DoInsertionSort(int[] value) {
+        int n = value.length;
+        for (int i = 1; i < n; i++) {
+            int key = value[i];
+            int j = i - 1;
+            while (j >= 0 && value[j] > key) {
+                value[j + 1] = value[j];
+                j--;
+            }
+            value[j + 1] = key;
+        }
+        return value;
+    }
+    
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	private static int[] DoHeapSort(int[] value)
-	{
-		// TODO : Heap Sort 를 구현하라.
-		return (value);
-	}
+    private static int[] DoHeapSort(int[] value) {
+        int n = value.length;
+    
+        // Build heap (rearrange array)
+        for (int i = n / 2 - 1; i >= 0; i--)
+            heapify(value, n, i);
+    
+        // One by one extract an element from heap
+        for (int i = n - 1; i > 0; i--) {
+            // Move current root to end
+            int temp = value[0];
+            value[0] = value[i];
+            value[i] = temp;
+    
+            // call max heapify on the reduced heap
+            heapify(value, i, 0);
+        }
+        return value;
+    }
+    
+    private static void heapify(int[] value, int n, int i) {
+        int largest = i;
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+    
+        if (left < n && value[left] > value[largest])
+            largest = left;
+    
+        if (right < n && value[right] > value[largest])
+        largest = right;
+
+        if (largest != i) {
+            int swap = value[i];
+            value[i] = value[largest];
+            value[largest] = swap;
+
+            heapify(value, n, largest);
+        }
+    }    
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	private static int[] DoMergeSort(int[] value)
-	{
-		// TODO : Merge Sort 를 구현하라.
-		return (value);
-	}
+    private static int[] DoMergeSort(int[] value) {
+        if (value.length <= 1)
+            return value;
+    
+        int mid = value.length / 2;
+        int[] left = Arrays.copyOfRange(value, 0, mid);
+        int[] right = Arrays.copyOfRange(value, mid, value.length);
+    
+        left = DoMergeSort(left);
+        right = DoMergeSort(right);
+    
+        return merge(left, right);
+    }
+    
+    private static int[] merge(int[] left, int[] right) {
+        int[] merged = new int[left.length + right.length];
+        int i = 0, j = 0, k = 0;
+    
+        while (i < left.length && j < right.length) {
+            if (left[i] <= right[j])
+                merged[k++] = left[i++];
+            else
+                merged[k++] = right[j++];
+        }
+    
+        while (i < left.length)
+            merged[k++] = left[i++];
+    
+        while (j < right.length)
+            merged[k++] = right[j++];
+    
+        return merged;
+    }    
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	private static int[] DoQuickSort(int[] value)
-	{
-		// TODO : Quick Sort 를 구현하라.
-		return (value);
-	}
+    private static int[] DoQuickSort(int[] value) {
+        quickSort(value, 0, value.length - 1);
+        return value;
+    }
+    
+    private static void quickSort(int[] value, int low, int high) {
+        if (low < high) {
+            int pivotIndex = partition(value, low, high);
+            quickSort(value, low, pivotIndex - 1);
+            quickSort(value, pivotIndex + 1, high);
+        }
+    }
+    
+    private static int partition(int[] value, int low, int high) {
+        int pivot = value[high];
+        int i = low - 1;
+    
+        for (int j = low; j < high; j++) {
+            if (value[j] < pivot) {
+                i++;
+                int temp = value[i];
+                value[i] = value[j];
+                value[j] = temp;
+            }
+        }
+    
+        int temp = value[i + 1];
+        value[i + 1] = value[high];
+        value[high] = temp;
+    
+        return i + 1;
+    }
+    
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	private static int[] DoRadixSort(int[] value)
-	{
-		// TODO : Radix Sort 를 구현하라.
-		return (value);
-	}
+    private static int[] DoRadixSort(int[] value) {
+        // Find the maximum number to determine the number of digits
+        int max = getMax(value);
+    
+        // Perform counting sort for every digit
+        for (int exp = 1; max / exp > 0; exp *= 10) {
+            countingSort(value, exp);
+        }
+    
+        return value;
+    }
+    
+    private static int getMax(int[] value) {
+        int max = value[0];
+        for (int i = 1; i < value.length; i++) {
+            if (value[i] > max) {
+                max = value[i];
+            }
+        }
+        return max;
+    }
+    
+    private static void countingSort(int[] value, int exp) {
+        int n = value.length;
+        int[] output = new int[n];
+        int[] count = new int[10];
+    
+        Arrays.fill(count, 0);
+    
+        // Store count of occurrences in count[]
+        for (int i = 0; i < n; i++) {
+            count[(value[i] / exp) % 10]++;
+        }
+    
+        // Change count[i] so that count[i] contains the actual
+        // position of this digit in output[]
+        for (int i = 1; i < 10; i++) {
+            count[i] += count[i - 1];
+        }
+    
+        // Build the output array
+        for (int i = n - 1; i >= 0; i--) {
+            output[count[(value[i] / exp) % 10] - 1] = value[i];
+            count[(value[i] / exp) % 10]--;
+        }
+    
+        // Copy the output array to arr[], so that arr[] contains
+        // sorted numbers according to the current digit
+        System.arraycopy(output, 0, value, 0, n);
+    }
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
     private static char DoSearch(int[] value)
