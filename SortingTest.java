@@ -259,10 +259,48 @@ public class SortingTest
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
     private static int[] DoRadixSort(int[] value) {
+        // Separate positive and negative numbers
+        int[] positiveNumbers = Arrays.stream(value)
+                .filter(num -> num >= 0)
+                .toArray();
+        int[] negativeNumbers = Arrays.stream(value)
+                .filter(num -> num < 0)
+                .map(num -> -num) // Convert negative numbers to positive for sorting
+                .toArray();
+    
+        // Sort the positive numbers and negative numbers separately
+        positiveNumbers = radixSort(positiveNumbers);
+        negativeNumbers = radixSort(negativeNumbers);
+    
+        // Merge the sorted positive and negative numbers
+        int[] sortedArray = new int[value.length];
+        int positiveIndex = 0;
+        int negativeIndex = negativeNumbers.length - 1;
+    
+        // Copy the negative numbers in descending order
+        for (int i = 0; i < value.length; i++) {
+            if (value[i] < 0) {
+                sortedArray[i] = -negativeNumbers[negativeIndex];
+                negativeIndex--;
+            }
+        }
+    
+        // Copy the positive numbers in ascending order
+        for (int i = 0; i < value.length; i++) {
+            if (value[i] >= 0) {
+                sortedArray[i] = positiveNumbers[positiveIndex];
+                positiveIndex++;
+            }
+        }
+    
+        return sortedArray;
+    }
+    
+    private static int[] radixSort(int[] value) {
         // Find the maximum number to determine the number of digits
         int max = getMax(value);
     
-        // Perform counting sort for every digit
+        // Perform counting sort for every digit from least significant to most significant
         for (int exp = 1; max / exp > 0; exp *= 10) {
             countingSort(value, exp);
         }
@@ -271,10 +309,10 @@ public class SortingTest
     }
     
     private static int getMax(int[] value) {
-        int max = value[0];
+        int max = Math.abs(value[0]);
         for (int i = 1; i < value.length; i++) {
-            if (value[i] > max) {
-                max = value[i];
+            if (Math.abs(value[i]) > max) {
+                max = Math.abs(value[i]);
             }
         }
         return max;
@@ -283,32 +321,34 @@ public class SortingTest
     private static void countingSort(int[] value, int exp) {
         int n = value.length;
         int[] output = new int[n];
-        int[] count = new int[10];
+        int[] count = new int[19]; // Range from -9 to 9 (total 19 elements)
     
         Arrays.fill(count, 0);
     
         // Store count of occurrences in count[]
         for (int i = 0; i < n; i++) {
-            count[(value[i] / exp) % 10]++;
+            int digit = (value[i] / exp) % 10;
+            count[digit + 9]++; // Shift the index by 9 to handle negative numbers
         }
     
         // Change count[i] so that count[i] contains the actual
         // position of this digit in output[]
-        for (int i = 1; i < 10; i++) {
+        for (int i = 1; i < 19; i++) { // Range from -9 to 9 (total 19 elements)
             count[i] += count[i - 1];
         }
     
         // Build the output array
         for (int i = n - 1; i >= 0; i--) {
-            output[count[(value[i] / exp) % 10] - 1] = value[i];
-            count[(value[i] / exp) % 10]--;
+            int digit = (value[i] / exp) % 10;
+            output[count[digit + 9] - 1] = value[i];
+            count[digit + 9]--;
         }
     
         // Copy the output array to arr[], so that arr[] contains
         // sorted numbers according to the current digit
         System.arraycopy(output, 0, value, 0, n);
     }
-
+    
 	////////////////////////////////////////////////////////////////////////////////////////////////////
     private static char DoSearch(int[] value)
 	{
