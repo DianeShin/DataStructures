@@ -114,6 +114,7 @@ public class SortingTest
 		// 주어진 value 배열에서 안의 값만을 바꾸고 value를 다시 리턴하거나
 		// 같은 크기의 새로운 배열을 만들어 그 배열을 리턴할 수도 있다.
 		
+    // all sorting methods are purely made from chatGPT
 	////////////////////////////////////////////////////////////////////////////////////////////////////
     private static int[] DoBubbleSort(int[] value) {
         int n = value.length;
@@ -360,6 +361,7 @@ public class SortingTest
     }    
     
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+    // calculating values are from chatGPT, choosing which methods to return is from me.
     private static char DoSearch(int[] value)
 	{
         // 1. if max digit count is less than 10, return radix sort.
@@ -397,10 +399,17 @@ public class SortingTest
             if (value[i] <= value[i+1]) sorted_cnt++;
         }
 
-        // choose method
-        if (sorted_cnt == value.length-1 || sorted_cnt < value.length/10) return ('I'); // already or almost sorted array
-        else if ((double )collisionCount/value.length < 0.5) return ('Q'); // less duplicates        
-        else if (max_length < 10) return ('R'); // small digit length
-		else return ('H'); // generally, heap sort can be a good option
+        // 4. choose method
+        if (((double)(value.length - sorted_cnt) / value.length) * 100 < 0.63) return ('I'); // already or almost sorted array
+        
+        if ((double)collisionCount/value.length*100 < 1.9) return ('Q'); // less duplicates        
+        
+        if (max_length == 8){
+            if (value.length > 1.1e6) return ('R');
+            else return ('H');
+        }
+        else if (max_length > 8) return ('R'); // long numbers -> radix is better
+
+		return ('H'); // generally, heap sort can be a good option
 	}
 }
