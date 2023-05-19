@@ -1,6 +1,7 @@
 import java.io.*;
 import java.util.*;
 
+
 public class SortingTest
 {
 	public static void main(String args[])
@@ -129,7 +130,6 @@ public class SortingTest
         return value;
     }
     
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////
     private static int[] DoInsertionSort(int[] value) {
         int n = value.length;
@@ -144,7 +144,6 @@ public class SortingTest
         }
         return value;
     }
-    
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
     private static int[] DoHeapSort(int[] value) {
@@ -259,6 +258,10 @@ public class SortingTest
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
     private static int[] DoRadixSort(int[] value) {
+        if (value.length == 0) {
+            return value; // Return empty array as it is already sorted
+        }
+    
         // Separate positive and negative numbers
         int[] positiveNumbers = Arrays.stream(value)
                 .filter(num -> num >= 0)
@@ -268,39 +271,41 @@ public class SortingTest
                 .map(num -> -num) // Convert negative numbers to positive for sorting
                 .toArray();
     
-        // Sort the positive numbers and negative numbers separately
-        positiveNumbers = radixSort(positiveNumbers);
-        negativeNumbers = radixSort(negativeNumbers);
+        // Sort the positive numbers and negative numbers separately (if they exist)
+        if (positiveNumbers.length > 0) {
+            positiveNumbers = radixSort(positiveNumbers);
+        }
+        if (negativeNumbers.length > 0) {
+            negativeNumbers = radixSort(negativeNumbers);
+        }
+    
+        // Reverse the negative numbers back to their original values
+        for (int i = 0; i < negativeNumbers.length; i++) {
+            negativeNumbers[i] = -negativeNumbers[i];
+        }
     
         // Merge the sorted positive and negative numbers
         int[] sortedArray = new int[value.length];
-        int positiveIndex = 0;
-        int negativeIndex = negativeNumbers.length - 1;
+        int sortedIndex = 0;
     
-        // Copy the negative numbers in descending order
-        for (int i = 0; i < value.length; i++) {
-            if (value[i] < 0) {
-                sortedArray[i] = -negativeNumbers[negativeIndex];
-                negativeIndex--;
-            }
+        // Add the negative numbers in descending order
+        for (int i = negativeNumbers.length - 1; i >= 0; i--) {
+            sortedArray[sortedIndex] = negativeNumbers[i];
+            sortedIndex++;
         }
     
-        // Copy the positive numbers in ascending order
-        for (int i = 0; i < value.length; i++) {
-            if (value[i] >= 0) {
-                sortedArray[i] = positiveNumbers[positiveIndex];
-                positiveIndex++;
-            }
+        // Add the positive numbers in ascending order
+        for (int i = 0; i < positiveNumbers.length; i++) {
+            sortedArray[sortedIndex] = positiveNumbers[i];
+            sortedIndex++;
         }
-    
         return sortedArray;
     }
     
     private static int[] radixSort(int[] value) {
-        // Find the maximum number to determine the number of digits
         int max = getMax(value);
     
-        // Perform counting sort for every digit from least significant to most significant
+        // Perform counting sort for each digit from least significant to most significant
         for (int exp = 1; max / exp > 0; exp *= 10) {
             countingSort(value, exp);
         }
@@ -308,51 +313,94 @@ public class SortingTest
         return value;
     }
     
-    private static int getMax(int[] value) {
-        int max = Math.abs(value[0]);
-        for (int i = 1; i < value.length; i++) {
-            if (Math.abs(value[i]) > max) {
-                max = Math.abs(value[i]);
-            }
-        }
-        return max;
+    private static int getMax(int[] arr) {
+        return getMaxRecursive(arr, 0, arr.length - 1);
     }
+    
+    private static int getMaxRecursive(int[] arr, int start, int end) {
+        if (start == end) {
+            return arr[start];
+        }
+    
+        int mid = (start + end) / 2;
+        int leftMax = getMaxRecursive(arr, start, mid);
+        int rightMax = getMaxRecursive(arr, mid + 1, end);
+    
+        return Math.max(leftMax, rightMax);
+    }    
     
     private static void countingSort(int[] value, int exp) {
         int n = value.length;
         int[] output = new int[n];
-        int[] count = new int[19]; // Range from -9 to 9 (total 19 elements)
+        int[] count = new int[10];
     
         Arrays.fill(count, 0);
     
         // Store count of occurrences in count[]
         for (int i = 0; i < n; i++) {
             int digit = (value[i] / exp) % 10;
-            count[digit + 9]++; // Shift the index by 9 to handle negative numbers
+            count[digit]++;
         }
     
         // Change count[i] so that count[i] contains the actual
         // position of this digit in output[]
-        for (int i = 1; i < 19; i++) { // Range from -9 to 9 (total 19 elements)
+        for (int i = 1; i < 10; i++) {
             count[i] += count[i - 1];
         }
     
-        // Build the output array
+        // Build the output array in reverse order to maintain stability
         for (int i = n - 1; i >= 0; i--) {
             int digit = (value[i] / exp) % 10;
-            output[count[digit + 9] - 1] = value[i];
-            count[digit + 9]--;
+            output[count[digit] - 1] = value[i];
+            count[digit]--;
         }
     
-        // Copy the output array to arr[], so that arr[] contains
-        // sorted numbers according to the current digit
+        // Copy the output array to the original array
         System.arraycopy(output, 0, value, 0, n);
-    }
+    }    
     
 	////////////////////////////////////////////////////////////////////////////////////////////////////
     private static char DoSearch(int[] value)
 	{
-		// TODO : Search 를 구현하라.
-		return (' '); // 여러 조건을 설정하고, 각 조건에 따라 B, I, H, M, Q, R 중 하나를 리턴하라.
+        // 1. if max digit count is less than 10, return radix sort.
+        int[] absoluteNumbers = new int[value.length];
+        
+        for (int i = 0; i < value.length; i++) {
+            absoluteNumbers[i] = Math.abs(value[i]);
+        }
+
+        int max_val = getMax(absoluteNumbers);
+        int max_length = (int) Math.log10(max_val) + 1;
+
+
+
+        // 2. push into hash map and check collision rate
+        // Create a hash table
+        HashMap<Integer, Integer> hashMap = new HashMap<>();
+
+        // Count the number of collisions
+        int collisionCount = 0;
+        for (int i = 0; i < value.length; i++) {
+            int key = value[i];
+            if (hashMap.containsKey(key)) {
+                // Collision occurred
+                collisionCount++;
+            } else {
+                // Insert the element into the hash table
+                hashMap.put(key, i);
+            }
+        }
+
+        // 3. check how much it's sorted
+        int sorted_cnt = 0;
+        for (int i = 0; i < value.length-1; i++) {
+            if (value[i] <= value[i+1]) sorted_cnt++;
+        }
+
+        // choose method
+        if (sorted_cnt == value.length-1 || sorted_cnt < value.length/10) return ('I'); // already or almost sorted array
+        else if ((double )collisionCount/value.length < 0.5) return ('Q'); // less duplicates        
+        else if (max_length < 10) return ('R'); // small digit length
+		else return ('H'); // generally, heap sort can be a good option
 	}
 }
