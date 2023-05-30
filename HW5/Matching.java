@@ -1,4 +1,6 @@
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Matching
 {
@@ -25,7 +27,26 @@ public class Matching
 
 	private static void command(String input)
 	{
-		// TODO : 아래 문장을 삭제하고 구현해라.
-		System.out.println("<< command 함수에서 " + input + " 명령을 처리할 예정입니다 >>");
+		char command = input.charAt(0);
+		String filePath = input.split(" ")[1];
+
+		if (command == '<'){
+			List<String> lines = new ArrayList<>();
+
+			try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+				String line;
+				while ((line = reader.readLine()) != null) {
+					lines.add(line);
+				}
+			} catch (IOException e) {
+				System.err.println("Error reading the file: " + e.getMessage());
+			}
+		}
+
+		else if (command == '@');
+		else if (command == '?');
+		else if (command == '/');
+		else if (command == '+');
+		else return;
 	}
 }
