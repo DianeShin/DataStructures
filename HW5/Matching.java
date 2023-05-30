@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
 class Node {
@@ -139,8 +140,8 @@ class HashTable {
 
 public class Matching
 {
-	static HashTable hashTable = new HashTable();
-
+	static HashTable hashTable;
+	static int lineNumber;
 	public static void main(String args[])
 	{
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -168,9 +169,15 @@ public class Matching
 		String arg = input.split(" ")[1];
 
 		if (command == '<'){
+			// 1. init values
+			hashTable = new HashTable();
+			lineNumber = 0;
+
+			// 2. read lines
 			try (BufferedReader reader = new BufferedReader(new FileReader(arg))) {
 				String line;
 				while ((line = reader.readLine()) != null) {
+					lineNumber++;
 					hashTable.insert(line);
 				}
 			} catch (IOException e) {
@@ -188,7 +195,11 @@ public class Matching
 		
 		else if (command == '?');
 		else if (command == '/');
-		else if (command == '+');
+		else if (command == '+'){
+			lineNumber++;
+			hashTable.insert(arg);
+			System.out.println(lineNumber);
+		}
 		else return;
 	}
 }
