@@ -165,10 +165,10 @@ public class Matching
 	private static void command(String input)
 	{
 		char command = input.charAt(0);
-		String filePath = input.split(" ")[1];
+		String arg = input.split(" ")[1];
 
 		if (command == '<'){
-			try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+			try (BufferedReader reader = new BufferedReader(new FileReader(arg))) {
 				String line;
 				while ((line = reader.readLine()) != null) {
 					hashTable.insert(line);
@@ -178,7 +178,14 @@ public class Matching
 			}
 		}
 
-		else if (command == '@');
+		else if (command == '@'){
+			List<String> stringList = hashTable.search(arg);
+			if (stringList.size() == 0) System.out.println("EMPTY");
+			else{
+				for (String iter : stringList) System.out.println(iter);
+			}
+		}
+		
 		else if (command == '?');
 		else if (command == '/');
 		else if (command == '+');
