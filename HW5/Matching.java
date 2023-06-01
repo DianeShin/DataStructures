@@ -5,9 +5,9 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-// TODO : last substring is less than 6. Maybe I need to insert the shorter ones too? Then I need diff method to check correctness for last batch.
 public class Matching
 {
+    /* CHATGPT : no help */
     // linked list Node
     static class LinkedListNode<T1> { 
         T1 data; 
@@ -21,9 +21,11 @@ public class Matching
         } 
     }     
     
+    /* CHATGPT : help for insert, addList */
     static class LinkedList<T1> implements Iterable<T1>{ 
     
-        LinkedListNode<T1> head; // head of list 
+        LinkedListNode<T1> head; // head of list
+        LinkedListNode<T1> tail; // tail of list
         int size = 0;
 
         // Method to insert a new node 
@@ -34,40 +36,34 @@ public class Matching
             // If the Linked List is empty, 
             // then make the new node as head 
             if (this.head == null) { 
-                this.head = new_node; 
+                this.head = new_node;
+                this.tail = new_node;
             } 
-            else { 
-                // Else traverse till the last node 
-                // and insert the new_node there 
-                LinkedListNode<T1> last = this.head; 
-                while (last.next != null) { 
-                    last = last.next; 
-                } 
-        
+
+            else {
                 // Insert the new_node at last node 
-                last.next = new_node; 
+                tail.next = new_node; 
+                this.tail = new_node;
             }
             this.size++;
         } 
 
-        public void addList(LinkedList<T1> list){        
-            // If the Linked List is empty, 
-            // then make the new node as head 
-            if (this.head == null) { 
-                this.head = list.head; 
-                this.size = list.size;
-            } 
-            else { 
-                // Else traverse till the last node 
-                // and insert the new_node there 
-                LinkedListNode<T1> last = this.head; 
-                while (last.next != null) { 
-                    last = last.next; 
-                } 
-        
-                // Insert the new_node at last node 
-                last.next = list.head;
-                this.size += list.size; 
+        public void addList(LinkedList<T1> list) {
+            if (list != null) {
+                // If the Linked List is empty, 
+                // then make the new node as head 
+                if (this.head == null) { 
+                    this.head = list.head; 
+                    this.tail = list.tail;
+                    this.size = list.size;
+                } else { 
+                    // Insert the new_node at last node 
+                    if (list.head != null) {
+                        tail.next = list.head;
+                        this.tail = list.tail;
+                        this.size += list.size;
+                    }
+                }
             }
         }
 
@@ -98,6 +94,7 @@ public class Matching
         }
     }
 
+    /* CHATGPT : no help */
     static class LinkedListIterator<T> implements Iterator<T>{
         LinkedListNode<T> current;
 
@@ -124,6 +121,7 @@ public class Matching
         }
     }
 
+    /* CHATGPT : fully chatgpt */
     static class Tuple<T1, T2>{
         private final T1 item1;
         private final T2 item2;
@@ -147,6 +145,7 @@ public class Matching
         }
     }
 
+    /* CHATGPT : no help */
     static class Node{
         String key;
         int height;
@@ -162,105 +161,91 @@ public class Matching
 
     }
     
+    /* CHATGPT : no help */
     static class AVLTree {
         private Node root;
     
-        private int height(Node node) {
-            if (node == null)
-                return 0;
-            return node.height;
+        private int height(Node node){
+            if (node == null) return 0;
+            else return node.height;
         }
     
-        private int balanceFactor(Node node) {
-            if (node == null)
-                return 0;
-            return height(node.left) - height(node.right);
+        private int balanceDiff(Node node){
+            if (node == null) return 0;
+            else return height(node.left) - height(node.right);
         }
     
-        private Node rotateLeft(Node z) {
+        private Node rotateLeft(Node z){
+            // fetch node
             Node y = z.right;
             Node T2 = y.left;
     
+            // rotate
             y.left = z;
             z.right = T2;
     
+            // update height
             z.height = Math.max(height(z.left), height(z.right)) + 1;
             y.height = Math.max(height(y.left), height(y.right)) + 1;
     
             return y;
         }
     
-        private Node rotateRight(Node z) {
+        private Node rotateRight(Node z){
+            // fetch node
             Node y = z.left;
             Node T2 = y.right;
     
+            // rotate
             y.right = z;
             z.left = T2;
     
+            // update height
             z.height = Math.max(height(z.left), height(z.right)) + 1;
             y.height = Math.max(height(y.left), height(y.right)) + 1;
     
             return y;
         }
     
-        private Node insert(Node node, String key, Tuple<Integer, Integer> location) {
+        private Node insert(Node node, String key, Tuple<Integer, Integer> location){
+            // create new node if no node.
             if (node == null)
                 return new Node(key, location);
-    
-            if (key.compareTo(node.key) < 0)
-                node.left = insert(node.left, key, location);
-            else if (key.compareTo(node.key) > 0)
-                node.right = insert(node.right, key, location);
-            else{
+        
+            // optimizion, save comparison
+            int compareResult = key.compareTo(node.key);
+        
+            // insert node
+            if (compareResult < 0) node.left = insert(node.left, key, location);
+            else if (compareResult > 0) node.right = insert(node.right, key, location);
+            else {
                 node.locationList.insert(location);
                 return node;
             }
-                
-    
-            node.height = 1 + Math.max(height(node.left), height(node.right));
-    
-            int balance = balanceFactor(node);
-    
-            if (balance > 1 && key.compareTo(node.left.key) < 0)
-                return rotateRight(node);
-    
-            if (balance < -1 && key.compareTo(node.right.key) > 0)
-                return rotateLeft(node);
-    
+        
+            // check height
+            node.height = Math.max(height(node.left), height(node.right)) + 1;
+        
+            // check balance
+            int balance = balanceDiff(node);
+        
+            // rebalance if balance wrong
+            if (balance > 1 && key.compareTo(node.left.key) < 0) return rotateRight(node);
+            if (balance < -1 && key.compareTo(node.right.key) > 0) return rotateLeft(node);        
             if (balance > 1 && key.compareTo(node.left.key) > 0) {
                 node.left = rotateLeft(node.left);
                 return rotateRight(node);
-            }
-    
+            }        
             if (balance < -1 && key.compareTo(node.right.key) < 0) {
                 node.right = rotateRight(node.right);
                 return rotateLeft(node);
             }
-    
+        
             return node;
-        }
+        }        
     
         public void insert(String key, Tuple<Integer, Integer> location) {
             root = insert(root, key, location);
-        }
-
-        private Node delete(Node node, String key) {
-            if (node == null)
-                return null;
-    
-            if (key.compareTo(node.key) < 0)
-                node.left = delete(node.left, key);
-            else if (key.compareTo(node.key) > 0)
-                node.right = delete(node.right, key);
-            
-            return node;
-        }
-    
-        public int delete(String key) {
-            root = delete(root, key);
-            int delNodeCnt = root.locationList.size;
-            root.locationList = new LinkedList<>();
-            return delNodeCnt;
         }
 
         private void preorderTraversal(Node node, List<String> result) {
@@ -294,6 +279,7 @@ public class Matching
         }
     }
     
+    /* CHATGPT : basic structure from gpt, methods added by me, with help of details from gpt */
     static class HashTable {
         private AVLTree[] slots;
     
@@ -338,11 +324,6 @@ public class Matching
 
         public LinkedList<Tuple<Integer,Integer>> searchSubstr(String substr) {
             return slots[hash(substr)].preorderTraversalSearch(substr);
-        }
-
-        public int deleteSubStr(String substr){
-            int delNodeCnt = slots[hash(substr)].delete(substr);
-            return delNodeCnt;
         }
 
         public List<Tuple<Integer, Integer>> findString(String pattern, HashTable hashTable_ends) {
@@ -399,7 +380,7 @@ public class Matching
     static HashTable hashTable_ends;
 	static int lineNumber;
     static List<String> inputText;
-    
+
 	public static void main(String args[])
 	{
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -416,7 +397,7 @@ public class Matching
 			}
 			catch (IOException e)
 			{
-				System.out.println("입력이 잘못되었습니다. 오류 : " + e.toString());
+				System.out.println("ERR : " + e.toString());
 			}
 		}
 	}
@@ -426,6 +407,7 @@ public class Matching
 		char command = input.charAt(0);
 		String arg = input.substring(2);
 
+        /* CHATGPT : no help */
 		if (command == '<'){
 			// 1. init values
 			hashTable = new HashTable();
@@ -447,6 +429,7 @@ public class Matching
 			}
 		}
 
+        /* CHATGPT : help for stringbuilder */
 		else if (command == '@'){
 			List<String> stringList = hashTable.search(Integer.parseInt(arg));
             if (stringList.size() == 0) {
@@ -461,6 +444,7 @@ public class Matching
             }            
 		}
 
+        /* CHATGPT : help for tupleComparator, stringbuilder */
 		else if (command == '?'){
             // find search result
 			List<Tuple<Integer,Integer>> searchResult = hashTable.findString(arg, hashTable_ends);
@@ -494,6 +478,7 @@ public class Matching
             System.out.println();
 		}
 
+        /* CHATGPT : help for comparator, stringbuilder */
 		else if (command == '/'){
             // get list of locations
             LinkedList<Tuple<Integer, Integer>> locationLinkedList = hashTable.searchSubstr(arg);
@@ -516,18 +501,15 @@ public class Matching
 
             // modify input string
             for (Tuple<Integer, Integer> location : locationList) {
-                System.out.println(location.toString());
                 int lineNumber = location.getItem1();
                 int startIndex = location.getItem2();
     
                 // Check if the lineNumber is within the inputText range
                 String line = inputText.get(lineNumber - 1);
                 String updatedLine = line.substring(0, startIndex-1) + line.substring(Math.min(startIndex + 5, line.length()));
-                System.out.println(updatedLine);
                 inputText.set(lineNumber - 1, updatedLine);   
             }
 
-            for (String str : inputText) System.out.println(str);
             // rehash new substring -> new hash table!
             hashTable = new HashTable();
             hashTable_ends = new HashTable();
@@ -543,6 +525,7 @@ public class Matching
             System.out.println(locationList.size());
         }
 
+        /* CHATGPT : no help */
 		else if (command == '+'){
             inputText.add(arg);
 			hashTable.insert(arg, lineNumber);
