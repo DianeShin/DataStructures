@@ -344,23 +344,26 @@ public class Matching
             int delNodeCnt = slots[hash(substr)].delete(substr);
             return delNodeCnt;
         }
-        // TODO : fix the less than 6 char issue
-        // TODO : the search algorithm itself is wrong as well.
-        public List<Tuple<Integer, Integer>> findString(String pattern) {
+
+        public List<Tuple<Integer, Integer>> findString(String pattern, HashTable hashTable_ends) {
             List<String> substrList = new ArrayList<>();
             List<LinkedList<Tuple<Integer,Integer>>> searchResult = new ArrayList<>();
             List<Tuple<Integer, Integer>> result = new ArrayList<>();
             int startIndex = 0;
 
-            // 1. split pattern with 6 char.
+            // 1. split pattern with 6 char (or less for last)
             while (startIndex < pattern.length()){
                substrList.add(pattern.substring(startIndex, Math.min(startIndex + 6, pattern.length())));
                startIndex += 6;
             }
 
             // 2. search location of every pattern
-            for (String substr : substrList){
-                searchResult.add(hashTable.searchSubstr(substr));
+            for (int index = 0; index < substrList.size(); index++){
+                if (index == substrList.size() - 1 && substrList.get(index).length() != 6){
+                    searchResult.add(hashTable_ends.searchSubstr(substrList.get(index))); // dangling pattern searched separately.
+                } 
+                else searchResult.add(hashTable.searchSubstr(substrList.get(index)));
+
             }
             
             // 3. if connects, we can fetch first search result.
@@ -396,6 +399,7 @@ public class Matching
     static HashTable hashTable_ends;
 	static int lineNumber;
     static List<String> inputText;
+    
 	public static void main(String args[])
 	{
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -459,7 +463,7 @@ public class Matching
 
 		else if (command == '?'){
             // find search result
-			List<Tuple<Integer,Integer>> searchResult = hashTable.findString(arg);
+			List<Tuple<Integer,Integer>> searchResult = hashTable.findString(arg, hashTable_ends);
 
             // Create a custom comparator to compare the tuples
             Comparator<Tuple<Integer, Integer>> tupleComparator = new Comparator<Tuple<Integer, Integer>>() {
@@ -526,9 +530,13 @@ public class Matching
             for (String str : inputText) System.out.println(str);
             // rehash new substring -> new hash table!
             hashTable = new HashTable();
+            hashTable_ends = new HashTable();
             for (int i = 0; i < inputText.size(); i++){
                 if (inputText.get(i).length() < 6) continue;
-                else hashTable.insert(inputText.get(i), i+1);                
+                else{
+                    hashTable_ends.insert_ends(inputText.get(i), i+1); 
+                    hashTable.insert(inputText.get(i), i+1); 
+                }                
             }
 
             // print del cnt
