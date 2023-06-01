@@ -127,12 +127,22 @@ public class Matching
             for (int i = 0; i < key.length(); i++) {
                 sum += (int) key.charAt(i);
             }
+            System.out.println(sum%100);
             return sum % 100;
         }
     
         public void insert(String key, int line) {
-            int slotIndex = hash(key);
-            slots[slotIndex].insert(key, line);
+            int startIndex = 0;
+            int endIndex = Math.min(6, key.length());
+        
+            while (startIndex < key.length()) {
+                String substring = key.substring(startIndex, endIndex);
+                int slotIndex = hash(substring);
+                slots[slotIndex].insert(substring, line);
+        
+                startIndex = endIndex;
+                endIndex = Math.min(startIndex + 6, key.length());
+            }
         }
     
         public List<String> search(String key) {
@@ -148,7 +158,7 @@ public class Matching
 
 	static HashTable hashTable;
 	static int lineNumber;
-    
+
 	public static void main(String args[])
 	{
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
