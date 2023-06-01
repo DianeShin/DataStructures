@@ -311,7 +311,7 @@ public class Matching
             }
             return sum % 100;
         }
-    
+
         public void insert(String key, int line) {
             int startIndex = 0;
             while (startIndex + 5 < key.length()){
@@ -321,7 +321,17 @@ public class Matching
                 startIndex++;                
             }
         }               
-    
+
+        public void insert_ends(String key, int line) {
+            for (int substringLength = 1; substringLength <= 5; substringLength++) {
+                for (int startIndex = 0; startIndex + substringLength <= key.length(); startIndex++) {
+                    String substring = key.substring(startIndex, startIndex + substringLength);
+                    int slotIndex = hash(substring);
+                    slots[slotIndex].insert(substring, new Tuple<Integer, Integer>(line, startIndex + 1));
+                }
+            }
+        } 
+
         public List<String> search(int slot) {
             return slots[slot].preorderTraversal();
         }
@@ -334,7 +344,8 @@ public class Matching
             int delNodeCnt = slots[hash(substr)].delete(substr);
             return delNodeCnt;
         }
-        
+        // TODO : fix the less than 6 char issue
+        // TODO : the search algorithm itself is wrong as well.
         public List<Tuple<Integer, Integer>> findString(String pattern) {
             List<String> substrList = new ArrayList<>();
             List<LinkedList<Tuple<Integer,Integer>>> searchResult = new ArrayList<>();
@@ -353,24 +364,28 @@ public class Matching
             }
             
             // 3. if connects, we can fetch first search result.
-            for(Tuple<Integer,Integer> tupleIter : searchResult.get(0)){ // iterating starting index
+            for (Tuple<Integer, Integer> tupleIter : searchResult.get(0)) {
                 boolean fail = false;
-
-                for (int index = 1; index < searchResult.size(); index++){ // access each block of pattern substr
-                    if (fail) break; // search fail -> move to next starter location
-                    else{
-                        boolean succ = false;
-                        for (Tuple<Integer, Integer> innerTupleIter : searchResult.get(index)){
-                            if (tupleIter.item1 == innerTupleIter.item1 && tupleIter.item2 + 6 == innerTupleIter.item2){
-                                succ = true;
-                                break; // search success for now.
-                            } 
-                            else continue; // mismatch
-                        }  
-                        if (!succ) fail = true; // search fail        
+                int prevEndIndex = tupleIter.item2 + 6;
+        
+                for (int index = 1; index < searchResult.size(); index++) {
+                    boolean succ = false;
+                    for (Tuple<Integer, Integer> innerTupleIter : searchResult.get(index)) {
+                        if (tupleIter.item1.equals(innerTupleIter.item1) && prevEndIndex == innerTupleIter.item2) {
+                            succ = true;
+                            prevEndIndex = innerTupleIter.item2 + 6;
+                            break;
+                        }
                     }
-                }      
-                if (!fail) result.add(tupleIter);   
+                    if (!succ) {
+                        fail = true;
+                        break;
+                    }
+                }
+        
+                if (!fail) {
+                    result.add(tupleIter);
+                }
             }
 
             return result;
@@ -378,6 +393,7 @@ public class Matching
     }
 
 	static HashTable hashTable;
+    static HashTable hashTable_ends;
 	static int lineNumber;
     static List<String> inputText;
 	public static void main(String args[])
@@ -409,6 +425,7 @@ public class Matching
 		if (command == '<'){
 			// 1. init values
 			hashTable = new HashTable();
+            hashTable_ends = new HashTable();
             inputText = new ArrayList<>();
 			lineNumber = 1;
 
@@ -417,6 +434,7 @@ public class Matching
 				String line;
 				while ((line = reader.readLine()) != null) {
 					hashTable.insert(line, lineNumber);
+                    hashTable_ends.insert_ends(line, lineNumber);
                     inputText.add(line);
                     lineNumber++;
 				}
