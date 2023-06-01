@@ -110,6 +110,20 @@ public class Matching
             inorderTraversal(root, result);
             return result;
         }
+
+        private void preorderTraversal(Node node, List<String> result) {
+            if (node != null) {
+                result.add(node.key);
+                preorderTraversal(node.left, result);
+                preorderTraversal(node.right, result);
+            }
+        }
+        
+        public List<String> preorderTraversal() {
+            List<String> result = new ArrayList<>();
+            preorderTraversal(root, result);
+            return result;
+        }
     }
     
     static class HashTable {
@@ -133,20 +147,16 @@ public class Matching
     
         public void insert(String key, int line) {
             int startIndex = 0;
-            int endIndex = Math.min(6, key.length());
-        
-            while (startIndex < key.length()) {
-                String substring = key.substring(startIndex, endIndex);
+            while (startIndex + 5 < key.length()){
+                String substring = key.substring(startIndex, startIndex + 6);
                 int slotIndex = hash(substring);
                 slots[slotIndex].insert(substring, line);
-        
-                startIndex = endIndex;
-                endIndex = Math.min(startIndex + 6, key.length());
+                startIndex++;                
             }
-        }
+        }               
     
         public List<String> search(int slot) {
-            return slots[slot].inorderTraversal();
+            return slots[slot].preorderTraversal();
         }
     
         // TODO
