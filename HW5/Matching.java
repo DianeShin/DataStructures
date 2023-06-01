@@ -99,7 +99,6 @@ public class Matching
             return y;
         }
     
-        // TODO ; ensure uniqueness of node.
         private Node insert(Node node, String key, Tuple<Integer, Integer> location) {
             Node tempNode = new Node(key, location);
 
@@ -138,6 +137,64 @@ public class Matching
     
         public void insert(String key, Tuple<Integer, Integer> location) {
             root = insert(root, key, location);
+        }
+        
+        private Node delete(Node node, String key) {
+            if (node == null)
+                return null;
+    
+            if (key.compareTo(node.key) < 0)
+                node.left = delete(node.left, key);
+            else if (key.compareTo(node.key) > 0)
+                node.right = delete(node.right, key);
+            else {
+                if (node.left == null && node.right == null) {
+                    // Case 1: Node to be deleted has no children
+                    return null;
+                } else if (node.left == null || node.right == null) {
+                    // Case 2: Node to be deleted has one child
+                    if (node.left != null)
+                        return node.left;
+                    else
+                        return node.right;
+                } else {
+                    // Case 3: Node to be deleted has two children
+                    Node successor = findMinimum(node.right);
+                    node.key = successor.key;
+                    node.right = delete(node.right, successor.key);
+                }
+            }
+    
+            node.height = 1 + Math.max(height(node.left), height(node.right));
+            int balance = balanceFactor(node);
+    
+            if (balance > 1 && balanceFactor(node.left) >= 0)
+                return rotateRight(node);
+    
+            if (balance > 1 && balanceFactor(node.left) < 0) {
+                node.left = rotateLeft(node.left);
+                return rotateRight(node);
+            }
+    
+            if (balance < -1 && balanceFactor(node.right) <= 0)
+                return rotateLeft(node);
+    
+            if (balance < -1 && balanceFactor(node.right) > 0) {
+                node.right = rotateRight(node.right);
+                return rotateLeft(node);
+            }
+    
+            return node;
+        }
+    
+        public void delete(String key) {
+            root = delete(root, key);
+        }
+    
+        private Node findMinimum(Node node) {
+            if (node == null || node.left == null)
+                return node;
+            return findMinimum(node.left);
         }
 
         private void preorderTraversal(Node node, List<String> result) {
@@ -328,7 +385,9 @@ public class Matching
             System.out.println();
 		}
 
-		else if (command == '/');
+		else if (command == '/'){
+
+        }
 		else if (command == '+'){
 			hashTable.insert(arg, lineNumber);
 			System.out.println(lineNumber);
