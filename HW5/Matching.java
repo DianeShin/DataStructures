@@ -2,10 +2,117 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 public class Matching
 {
+    // linked list Node
+    static class LinkedListNode<T1> { 
+        T1 data; 
+        LinkedListNode<T1> next; 
+    
+        // Constructor 
+        LinkedListNode(T1 data) 
+        { 
+            this.data = data; 
+            next = null; 
+        } 
+    }     
+    
+    static class LinkedList<T1> implements Iterable<T1>{ 
+    
+        LinkedListNode<T1> head; // head of list 
+        int size = 0;
+
+        // Method to insert a new node 
+        public void insert(T1 data) { 
+            // Create a new node with given data 
+            LinkedListNode<T1> new_node = new LinkedListNode<T1>(data); 
+        
+            // If the Linked List is empty, 
+            // then make the new node as head 
+            if (this.head == null) { 
+                this.head = new_node; 
+            } 
+            else { 
+                // Else traverse till the last node 
+                // and insert the new_node there 
+                LinkedListNode<T1> last = this.head; 
+                while (last.next != null) { 
+                    last = last.next; 
+                } 
+        
+                // Insert the new_node at last node 
+                last.next = new_node; 
+            }
+            this.size++;
+        } 
+
+        public void addList(LinkedList<T1> list){        
+            // If the Linked List is empty, 
+            // then make the new node as head 
+            if (this.head == null) { 
+                this.head = list.head; 
+                this.size = list.size;
+            } 
+            else { 
+                // Else traverse till the last node 
+                // and insert the new_node there 
+                LinkedListNode<T1> last = this.head; 
+                while (last.next != null) { 
+                    last = last.next; 
+                } 
+        
+                // Insert the new_node at last node 
+                last.next = list.head;
+                this.size += list.size; 
+            }
+        }
+
+        public T1 get(int index){
+            LinkedListNode<T1> result = head;
+            for (int i = 0; i < index-1; i++){
+                result = result.next;
+            }
+            return result.data;
+        }
+
+        public Iterator<T1> iterator(){
+            return new LinkedListIterator<T1>(this);
+        }
+        
+        public int size(){
+            return size;
+        }
+    }
+
+    static class LinkedListIterator<T> implements Iterator<T>{
+        LinkedListNode<T> current;
+
+        // constructor
+        LinkedListIterator(LinkedList<T> list) {
+            current = list.head;
+        }
+        
+        // Checks if the next element exists
+        public boolean hasNext() {
+            return current != null;
+        }
+        
+        // moves the cursor/iterator to next element
+        public T next() {
+            T data = current.data;
+            current = current.next;
+            return data;
+        }
+        
+        // Used to remove an element. Implement only if needed
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
     static class Tuple<T1, T2>{
         private final T1 item1;
         private final T2 item2;
@@ -29,33 +136,19 @@ public class Matching
         }
     }
 
-    static class Node implements Comparable<Node>{
+    static class Node{
         String key;
         int height;
-        Tuple<Integer, Integer> location;
+        LinkedList<Tuple<Integer,Integer>> locationList = new LinkedList<>();
         Node left;
         Node right;
     
         Node(String key, Tuple<Integer, Integer> location) {
             this.key = key;
-            this.location = location;
+            this.locationList.insert(location);
             height = 1;
         }
 
-        @Override
-        public int compareTo(Node otherNode) {      
-            if (this.key.compareTo(otherNode.key) > 0) return 1;
-            else if (this.key.compareTo(otherNode.key) < 0) return -1;
-            else{
-                if (this.location.item1 > otherNode.location.item1) return 1;
-                else if (this.location.item1 < otherNode.location.item1) return -1;
-                else{
-                    if (this.location.item2 > otherNode.location.item2) return 1;
-                    else if (this.location.item2 < otherNode.location.item2) return -1;
-                    else return 0;
-                }
-            }
-        }
     }
     
     static class AVLTree {
@@ -100,34 +193,35 @@ public class Matching
         }
     
         private Node insert(Node node, String key, Tuple<Integer, Integer> location) {
-            Node tempNode = new Node(key, location);
-
             if (node == null)
                 return new Node(key, location);
     
-            if (tempNode.compareTo(node) < 0)
+            if (key.compareTo(node.key) < 0)
                 node.left = insert(node.left, key, location);
-            else if (tempNode.compareTo(node) > 0)
+            else if (key.compareTo(node.key) > 0)
                 node.right = insert(node.right, key, location);
-            else
+            else{
+                node.locationList.insert(location);
                 return node;
+            }
+                
     
             node.height = 1 + Math.max(height(node.left), height(node.right));
     
             int balance = balanceFactor(node);
     
-            if (balance > 1 && tempNode.compareTo(node.left) < 0)
+            if (balance > 1 && key.compareTo(node.left.key) < 0)
                 return rotateRight(node);
     
-            if (balance < -1 && tempNode.compareTo(node.right) > 0)
+            if (balance < -1 && key.compareTo(node.right.key) > 0)
                 return rotateLeft(node);
     
-            if (balance > 1 && tempNode.compareTo(node.left) > 0) {
+            if (balance > 1 && key.compareTo(node.left.key) > 0) {
                 node.left = rotateLeft(node.left);
                 return rotateRight(node);
             }
     
-            if (balance < -1 && tempNode.compareTo(node.right) < 0) {
+            if (balance < -1 && key.compareTo(node.right.key) < 0) {
                 node.right = rotateRight(node.right);
                 return rotateLeft(node);
             }
@@ -138,7 +232,7 @@ public class Matching
         public void insert(String key, Tuple<Integer, Integer> location) {
             root = insert(root, key, location);
         }
-        
+
         private Node delete(Node node, String key) {
             if (node == null)
                 return null;
@@ -161,6 +255,7 @@ public class Matching
                     // Case 3: Node to be deleted has two children
                     Node successor = findMinimum(node.right);
                     node.key = successor.key;
+                    node.locationList = successor.locationList;
                     node.right = delete(node.right, successor.key);
                 }
             }
@@ -211,18 +306,20 @@ public class Matching
             return result;
         }
 
-        private void preorderTraversalSearch(Node node,  List<Tuple<Integer,Integer>> result, String substr) {
+        private LinkedList<Tuple<Integer, Integer>> preorderTraversalSearch(Node node, String substr) {
+            LinkedList<Tuple<Integer, Integer>> result = new LinkedList<>();
             if (node != null) {
-                if (node.key.equals(substr)) result.add(node.location);
-                preorderTraversalSearch(node.left, result, substr);
-                preorderTraversalSearch(node.right, result, substr);
+                if (node.key.equals(substr)) {
+                    result = node.locationList;
+                }
+                result.addList(preorderTraversalSearch(node.left, substr));
+                result.addList(preorderTraversalSearch(node.right, substr));
             }
+            return result;
         }
         
-        public List<Tuple<Integer,Integer>> preorderTraversalSearch(String substr) {
-            List<Tuple<Integer,Integer>> result = new ArrayList<>();
-            preorderTraversalSearch(root, result, substr);
-            return result;
+        public LinkedList<Tuple<Integer, Integer>> preorderTraversalSearch(String substr) {
+            return preorderTraversalSearch(root, substr);
         }
     }
     
@@ -258,29 +355,29 @@ public class Matching
             return slots[slot].preorderTraversal();
         }
 
-        public List<Tuple<Integer,Integer>> searchSubstr(String substr) {
+        public LinkedList<Tuple<Integer,Integer>> searchSubstr(String substr) {
             return slots[hash(substr)].preorderTraversalSearch(substr);
         }
 
         public List<Tuple<Integer, Integer>> findString(String pattern) {
             List<String> substrList = new ArrayList<>();
-            List<List<Tuple<Integer,Integer>>> searchResult = new ArrayList<>();
+            List<LinkedList<Tuple<Integer,Integer>>> searchResult = new ArrayList<>();
             List<Tuple<Integer, Integer>> result = new ArrayList<>();
             int startIndex = 0;
-            System.out.println(pattern.length());
+
             // 1. split pattern with 6 char.
             while (startIndex < pattern.length()){
                substrList.add(pattern.substring(startIndex, Math.min(startIndex + 6, pattern.length())));
                startIndex += 6;
             }
-            for (String iter : substrList) System.out.println(iter);
+
             // 2. search location of every pattern
             for (String substr : substrList){
                 searchResult.add(hashTable.searchSubstr(substr));
             }
             
             // 3. if connects, we can fetch first search result.
-            for(Tuple<Integer,Integer> tupleIter :searchResult.get(0)){ // iterating starting index
+            for(Tuple<Integer,Integer> tupleIter : searchResult.get(0)){ // iterating starting index
                 boolean fail = false;
 
                 for (int index = 1; index < searchResult.size(); index++){ // access each block of pattern substr
