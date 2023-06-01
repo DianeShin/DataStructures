@@ -96,20 +96,6 @@ public class Matching
         public void insert(String key, int line) {
             root = insert(root, key, line);
         }
-    
-        private void inorderTraversal(Node node, List<String> result) {
-            if (node != null) {
-                inorderTraversal(node.left, result);
-                result.add(node.key);
-                inorderTraversal(node.right, result);
-            }
-        }
-    
-        public List<String> inorderTraversal() {
-            List<String> result = new ArrayList<>();
-            inorderTraversal(root, result);
-            return result;
-        }
 
         private void preorderTraversal(Node node, List<String> result) {
             if (node != null) {
@@ -141,7 +127,6 @@ public class Matching
             for (int i = 0; i < key.length(); i++) {
                 sum += (int) key.charAt(i);
             }
-            System.out.println(sum%100);
             return sum % 100;
         }
     
@@ -215,7 +200,8 @@ public class Matching
 			List<String> stringList = hashTable.search(Integer.parseInt(arg));
 			if (stringList.size() == 0) System.out.println("EMPTY");
 			else{
-				for (String iter : stringList) System.out.println(iter);
+				for (String iter : stringList) System.out.print(iter + " ");
+                System.out.println();
 			}
 		}
 
