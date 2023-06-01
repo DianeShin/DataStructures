@@ -145,9 +145,8 @@ public class Matching
             }
         }
     
-        public List<String> search(String key) {
-            int slotIndex = hash(key);
-            return slots[slotIndex].inorderTraversal();
+        public List<String> search(int slot) {
+            return slots[slot].inorderTraversal();
         }
     
         // TODO
@@ -203,7 +202,7 @@ public class Matching
 		}
 
 		else if (command == '@'){
-			List<String> stringList = hashTable.search(arg);
+			List<String> stringList = hashTable.search(Integer.parseInt(arg));
 			if (stringList.size() == 0) System.out.println("EMPTY");
 			else{
 				for (String iter : stringList) System.out.println(iter);
