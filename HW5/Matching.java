@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+// TODO : last substring is less than 6. Maybe I need to insert the shorter ones too? Then I need diff method to check correctness for last batch.
 public class Matching
 {
     // linked list Node
@@ -84,6 +85,16 @@ public class Matching
         
         public int size(){
             return size;
+        }
+
+        public List<T1> toList() {
+            List<T1> list = new ArrayList<>();
+            LinkedListNode<T1> current = head;
+            while (current != null) {
+                list.add(current.data);
+                current = current.next;
+            }
+            return list;
         }
     }
 
@@ -241,55 +252,15 @@ public class Matching
                 node.left = delete(node.left, key);
             else if (key.compareTo(node.key) > 0)
                 node.right = delete(node.right, key);
-            else {
-                if (node.left == null && node.right == null) {
-                    // Case 1: Node to be deleted has no children
-                    return null;
-                } else if (node.left == null || node.right == null) {
-                    // Case 2: Node to be deleted has one child
-                    if (node.left != null)
-                        return node.left;
-                    else
-                        return node.right;
-                } else {
-                    // Case 3: Node to be deleted has two children
-                    Node successor = findMinimum(node.right);
-                    node.key = successor.key;
-                    node.locationList = successor.locationList;
-                    node.right = delete(node.right, successor.key);
-                }
-            }
-    
-            node.height = 1 + Math.max(height(node.left), height(node.right));
-            int balance = balanceFactor(node);
-    
-            if (balance > 1 && balanceFactor(node.left) >= 0)
-                return rotateRight(node);
-    
-            if (balance > 1 && balanceFactor(node.left) < 0) {
-                node.left = rotateLeft(node.left);
-                return rotateRight(node);
-            }
-    
-            if (balance < -1 && balanceFactor(node.right) <= 0)
-                return rotateLeft(node);
-    
-            if (balance < -1 && balanceFactor(node.right) > 0) {
-                node.right = rotateRight(node.right);
-                return rotateLeft(node);
-            }
-    
+            
             return node;
         }
     
-        public void delete(String key) {
+        public int delete(String key) {
             root = delete(root, key);
-        }
-    
-        private Node findMinimum(Node node) {
-            if (node == null || node.left == null)
-                return node;
-            return findMinimum(node.left);
+            int delNodeCnt = root.locationList.size;
+            root.locationList = new LinkedList<>();
+            return delNodeCnt;
         }
 
         private void preorderTraversal(Node node, List<String> result) {
@@ -359,6 +330,11 @@ public class Matching
             return slots[hash(substr)].preorderTraversalSearch(substr);
         }
 
+        public int deleteSubStr(String substr){
+            int delNodeCnt = slots[hash(substr)].delete(substr);
+            return delNodeCnt;
+        }
+        
         public List<Tuple<Integer, Integer>> findString(String pattern) {
             List<String> substrList = new ArrayList<>();
             List<LinkedList<Tuple<Integer,Integer>>> searchResult = new ArrayList<>();
@@ -403,7 +379,7 @@ public class Matching
 
 	static HashTable hashTable;
 	static int lineNumber;
-
+    static List<String> inputText;
 	public static void main(String args[])
 	{
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -433,6 +409,7 @@ public class Matching
 		if (command == '<'){
 			// 1. init values
 			hashTable = new HashTable();
+            inputText = new ArrayList<>();
 			lineNumber = 1;
 
 			// 2. read lines
@@ -440,6 +417,7 @@ public class Matching
 				String line;
 				while ((line = reader.readLine()) != null) {
 					hashTable.insert(line, lineNumber);
+                    inputText.add(line);
                     lineNumber++;
 				}
 			} catch (IOException e) {
@@ -449,11 +427,16 @@ public class Matching
 
 		else if (command == '@'){
 			List<String> stringList = hashTable.search(Integer.parseInt(arg));
-			if (stringList.size() == 0) System.out.println("EMPTY");
-			else{
-				for (String iter : stringList) System.out.print(iter + " ");
-                System.out.println();
-			}
+            if (stringList.size() == 0) {
+                System.out.println("EMPTY");
+            } else {
+                StringBuilder resultString = new StringBuilder();
+                for (String iter : stringList) {
+                    resultString.append(iter).append(' ');
+                }
+                resultString.deleteCharAt(resultString.length() - 1); // Remove the last space
+                System.out.println(resultString);
+            }            
 		}
 
 		else if (command == '?'){
@@ -475,17 +458,67 @@ public class Matching
             // Sort the searchResult list using the custom comparator
             Collections.sort(searchResult, tupleComparator);
             
-            if (searchResult.isEmpty()) System.out.print("(0, 0)");
-            else{
-                for (Tuple<Integer, Integer> tup : searchResult) System.out.print(tup.toString() + ' ');
+            if (searchResult.isEmpty()) {
+                System.out.print("(0, 0)");
+            } 
+            else {
+                StringBuilder resultString = new StringBuilder();
+                for (Tuple<Integer, Integer> tup : searchResult) {
+                    resultString.append(tup.toString()).append(' ');
+                }
+                resultString.deleteCharAt(resultString.length() - 1); // Remove the last space
+                System.out.print(resultString);
             }
             System.out.println();
 		}
 
 		else if (command == '/'){
+            // get list of locations
+            LinkedList<Tuple<Integer, Integer>> locationLinkedList = hashTable.searchSubstr(arg);
+            List<Tuple<Integer, Integer>> locationList = locationLinkedList.toList();
 
+            // Create a custom comparator to compare the tuples
+            Comparator<Tuple<Integer, Integer>> reverseTupleComparator = new Comparator<Tuple<Integer, Integer>>() {
+                @Override
+                public int compare(Tuple<Integer, Integer> tuple1, Tuple<Integer, Integer> tuple2) {
+                    int item1Comparison = -1 * tuple1.getItem1().compareTo(tuple2.getItem1());
+                    if (item1Comparison != 0) {
+                        return item1Comparison; // Compare item1 first
+                    }
+                    return -1 * tuple1.getItem2().compareTo(tuple2.getItem2()); // Compare item2 if item1 is identical
+                }
+            };
+
+            // reverse sort location list -> string deletion should be done from right to left.
+            locationList.sort(reverseTupleComparator);
+
+            // modify input string
+            for (Tuple<Integer, Integer> location : locationList) {
+                System.out.println(location.toString());
+                int lineNumber = location.getItem1();
+                int startIndex = location.getItem2();
+    
+                // Check if the lineNumber is within the inputText range
+                String line = inputText.get(lineNumber - 1);
+                String updatedLine = line.substring(0, startIndex-1) + line.substring(Math.min(startIndex + 5, line.length()));
+                System.out.println(updatedLine);
+                inputText.set(lineNumber - 1, updatedLine);   
+            }
+
+            for (String str : inputText) System.out.println(str);
+            // rehash new substring -> new hash table!
+            hashTable = new HashTable();
+            for (int i = 0; i < inputText.size(); i++){
+                if (inputText.get(i).length() < 6) continue;
+                else hashTable.insert(inputText.get(i), i+1);                
+            }
+
+            // print del cnt
+            System.out.println(locationList.size());
         }
+
 		else if (command == '+'){
+            inputText.add(arg);
 			hashTable.insert(arg, lineNumber);
 			System.out.println(lineNumber);
             lineNumber++;
