@@ -4,13 +4,14 @@ import java.io.InputStreamReader;
 
 public class Subway {
     public static void main(String args[]) {
+        // no data file
         if (args.length < 1) {
             System.out.println("No file name");
             return;
         }
 
+        // construct subway map
         String fileName = args[0];
-
         SubwayMap subwayMap = new SubwayMap();
         subwayMap.constructMap(fileName);
 
@@ -27,7 +28,8 @@ public class Subway {
                 else {
                     // split input
                     String[] words = input.split(" ");
-
+                    
+                    // calculate and print output
                     subwayMap.calculate(words[0]);
                     subwayMap.printResult(words[0], words[1]);
                 }

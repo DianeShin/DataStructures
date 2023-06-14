@@ -7,8 +7,7 @@ public class Station implements Comparable<Station>{
     public List<Edge> adjacentEdges = new ArrayList<>();
     public long time;
     public Station prev;
-    public boolean isTransfer;
-    public long transferTime = 5;
+    public long transferTime = 5; // default transfer time
 
     public Station(String id, String name, String line){
         this.id = id;

@@ -73,7 +73,6 @@ public class SubwayMap{
                     Long time = Long.parseLong(words[1]);
                     for (int srcIndex : srcIndexList){
                         Station srcStation = stationList.get(srcIndex);
-                        srcStation.isTransfer = true;
                         srcStation.transferTime = time;                        
                     }
 
