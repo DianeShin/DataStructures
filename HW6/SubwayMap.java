@@ -3,6 +3,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
+// TODO : how to not transfer on the first station?
 public class SubwayMap{
     private List<Station> stationList = new ArrayList<>();
     // station id to index
@@ -101,20 +102,24 @@ public class SubwayMap{
             }
         }
     }
-        // TODO : NEED A FIX
+
+    public void resetMap(){
+        for (Station station : stationList){
+            station.prev = null;
+        }
+    }
     public void calculate(String src){
-        Station srcStation = stationList.get(stationNameHashMap.get(src).get(0));
+        List<Integer> srcStationIndexList = stationNameHashMap.get(src);
 
         PriorityQueue<Station> priorityQueue = new PriorityQueue<>();
-
-        for (Station stationIter : stationList){
-            if (srcStation == stationIter){
-                stationIter.time = 0;
-                priorityQueue.add(stationIter);
+        for (int index = 0; index < stationList.size(); index++){
+            if (srcStationIndexList.contains(index)){
+                stationList.get(index).time = 0;
+                priorityQueue.add(stationList.get(index));
             }
             else{
-                stationIter.time = 1000000000L;
-                priorityQueue.add(stationIter);                    
+                stationList.get(index).time = 1000000000L;
+                priorityQueue.add(stationList.get(index));                
             }
         }
 
@@ -149,21 +154,14 @@ public class SubwayMap{
 
         while (true){
             //System.out.println(currStation.name);
-            try {
-                // Pause the program for 5 seconds
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                // Handle any exceptions
-                
-                e.printStackTrace();
-            }
 
             result.add(0, currStation);
 
-            if (currStation == srcStation) break;
+            if (currStation.name.equals(srcStation.name)) break;
             currStation = currStation.prev;
         }
 
+        // print final result
         for (int index = 0; index < result.size()-1; index++){
             if (result.get(index).name.equals(result.get(index+1).name)){
                 System.out.print("[" + result.get(index).name + "] ");
@@ -173,7 +171,7 @@ public class SubwayMap{
                 System.out.print(result.get(index).name + " ");
             }
         }
-        System.out.print(result.get(result.size()-1).name + " ");
+        System.out.print(result.get(result.size()-1).name);
 
         System.out.println();
         System.out.println(destStation.time);
