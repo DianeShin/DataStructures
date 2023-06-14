@@ -3,27 +3,31 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
-// TODO : how to not transfer on the first station?
 public class SubwayMap{
+    // save all stations in terms of id
     private List<Station> stationList = new ArrayList<>();
     // station id to index
     private HashMap<String, Integer> stationIDHashMap = new HashMap<>();
     // station name to index
     private HashMap<String, List<Integer>> stationNameHashMap = new HashMap<>();
-
+    // total station id cnt
     private int stationCnt = 0;
 
+    // construct map from input
     public void constructMap(String fileName){
         try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
             String line;
+
             // mode 0, 1, 2 for 3 types of input
             int mode = 0;
 
             while ((line = br.readLine()) != null) {
+                // change mode if we encounter an empty line
                 if (line.isEmpty()){
                     mode++; continue; 
                 } 
 
+                // parse input
                 String[] words = line.split(" ");
 
                 // save station info
@@ -36,12 +40,12 @@ public class SubwayMap{
                     stationIDHashMap.put(words[0], stationCnt);
                     
                     // save in name hashmap
-                    if (stationNameHashMap.get(words[1]) == null){
+                    if (stationNameHashMap.get(words[1]) == null){ // station never introduced
                         List<Integer> indexList = new ArrayList<>();
                         indexList.add(stationCnt);
                         stationNameHashMap.put(words[1], indexList); 
                     }
-                    else{
+                    else{ // same name station already in hash map
                         List<Integer> indexList = stationNameHashMap.get(words[1]);
                         indexList.add(stationCnt);
                         stationNameHashMap.put(words[1], indexList); 
@@ -79,7 +83,7 @@ public class SubwayMap{
             System.out.println("ERR: " + e.toString());
         }
 
-        // add edge as 
+        // create edge among transfer stations
         for (String srcName : stationNameHashMap.keySet()){
             // get src alias
             List<Integer> srcIndexList = stationNameHashMap.get(srcName);
@@ -103,14 +107,19 @@ public class SubwayMap{
         }
     }
 
+    // reset map for new calculation
     public void resetMap(){
         for (Station station : stationList){
             station.prev = null;
         }
     }
+
+    // perform dijkstra's algorithm
     public void calculate(String src){
+        // get all srcStations(considering we might start at a transfer station)
         List<Integer> srcStationIndexList = stationNameHashMap.get(src);
 
+        // initiate values, 0 for srcStation, 100M for anywhere else
         PriorityQueue<Station> priorityQueue = new PriorityQueue<>();
         for (int index = 0; index < stationList.size(); index++){
             if (srcStationIndexList.contains(index)){
@@ -123,6 +132,7 @@ public class SubwayMap{
             }
         }
 
+        // choose closest station, update distance if possible
         while (!priorityQueue.isEmpty()){
             Station closest = priorityQueue.poll();
 
@@ -139,7 +149,9 @@ public class SubwayMap{
         }
     }      
     
-    public List<Station> printResult(String src, String dest){
+    // print result on cmd
+    public void printResult(String src, String dest){
+        // get Station for src/dest
         Station srcStation = stationList.get(stationNameHashMap.get(src).get(0));
         Station destStation = stationList.get(stationNameHashMap.get(dest).get(0));
 
@@ -149,34 +161,40 @@ public class SubwayMap{
             if (station.time < destStation.time) destStation = station;
         }
 
+        // declare result list
         List<Station> result = new LinkedList<>();
+        // declare cursor
         Station currStation = destStation;
-
+        
+        // add station into list
         while (true){
-            //System.out.println(currStation.name);
-
+            // add station to start of list(dest -> src)
             result.add(0, currStation);
-
+            // break if srcStation reached
             if (currStation.name.equals(srcStation.name)) break;
+            // move cursor to prevStation
             currStation = currStation.prev;
         }
 
         // print final result
         for (int index = 0; index < result.size()-1; index++){
+            // transfer station
             if (result.get(index).name.equals(result.get(index+1).name)){
                 System.out.print("[" + result.get(index).name + "] ");
                 index++;
             }
+            // normal station
             else{
                 System.out.print(result.get(index).name + " ");
             }
         }
+        // end station
         System.out.print(result.get(result.size()-1).name);
-
         System.out.println();
+
+        // print time
         System.out.println(destStation.time);
 
-        return result;
     }
     
 }
