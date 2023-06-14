@@ -39,19 +39,22 @@ public class SubwayMap{
                     // save in id hashmap
                     stationIDHashMap.put(words[0], stationCnt);
                     
-                    // save in name hashmap
+                    // resolve index list
+                    List<Integer> indexList;
                     if (stationNameHashMap.get(words[1]) == null){ // station never introduced
-                        List<Integer> indexList = new ArrayList<>();
-                        indexList.add(stationCnt);
-                        stationNameHashMap.put(words[1], indexList); 
+                        indexList = new ArrayList<>();
                     }
-                    else{ // same name station already in hash map
-                        List<Integer> indexList = stationNameHashMap.get(words[1]);
-                        indexList.add(stationCnt);
-                        stationNameHashMap.put(words[1], indexList); 
-                    }
-                         
                     
+                    else{ // same name station already in hash map
+                        indexList = stationNameHashMap.get(words[1]);
+                    }
+                        
+                    // add new station into indexList
+                    indexList.add(stationCnt);
+
+                    // insert indexList
+                    stationNameHashMap.put(words[1], indexList);     
+
                     // increment station count
                     stationCnt++;
                 }
@@ -91,14 +94,14 @@ public class SubwayMap{
             if (srcIndexList.size() == 1) continue;
             // if not, create edges for each combination.
             else{
-                //System.out.println(srcName);
                 for (int item1 : srcIndexList){
                     for (int item2 : srcIndexList){
-                        if (item1 == item2) continue;
-                        else{
-                            //System.out.println(stationList.get(item1).name + " " + stationList.get(item2).name);
-                            Edge newEdge = new Edge(stationList.get(item2), stationList.get(item2).transferTime);
-                            stationList.get(item1).adjacentEdges.add(newEdge);
+                        Station item1Station = stationList.get(item1);
+                        Station item2Station = stationList.get(item2);
+                        if (item1 == item2) continue; // no edge if same station id
+                        else{ // yes edge if diff station id(transfer)
+                            Edge newEdge = new Edge(item2Station, item2Station.transferTime);
+                            item1Station.adjacentEdges.add(newEdge);
                         }
                     }
                 }
@@ -123,12 +126,12 @@ public class SubwayMap{
         for (int index = 0; index < stationList.size(); index++){
             if (srcStationIndexList.contains(index)){
                 stationList.get(index).time = 0;
-                priorityQueue.add(stationList.get(index));
             }
             else{
-                stationList.get(index).time = 1000000000L;
-                priorityQueue.add(stationList.get(index));                
+                stationList.get(index).time = 1000000000L;              
             }
+
+            priorityQueue.add(stationList.get(index));  
         }
 
         // choose closest station, update distance if possible
@@ -177,14 +180,15 @@ public class SubwayMap{
 
         // print final result
         for (int index = 0; index < result.size()-1; index++){
+            Station thisStation = result.get(index);
             // transfer station
-            if (result.get(index).name.equals(result.get(index+1).name)){
-                System.out.print("[" + result.get(index).name + "] ");
+            if (thisStation.name.equals(result.get(index+1).name)){
+                System.out.print("[" + thisStation.name + "] ");
                 index++;
             }
             // normal station
             else{
-                System.out.print(result.get(index).name + " ");
+                System.out.print(thisStation.name + " ");
             }
         }
         // end station
